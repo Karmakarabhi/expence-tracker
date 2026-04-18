@@ -38,7 +38,12 @@ exports.login = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    
+    // Normalize email as autocomplete often adds spaces or caps
+    if (email) {
+      email = email.trim().toLowerCase();
+    }
 
     // Check for user (include password field)
     const user = await User.findOne({ email }).select('+password');

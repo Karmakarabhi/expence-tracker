@@ -16,10 +16,14 @@ const {
 
 router.use(protect);
 
-// Summary routes (must be before /:id)
 router.get('/summary/category', getCategoryTotals);
 router.get('/summary/monthly', getMonthlyTotals);
 router.get('/summary/dashboard', getDashboardSummary);
+
+const wrap = fn => (req, res, next) => {
+  console.log("Wrapper Next is:", typeof next);
+  fn(req, res, next).catch(next);
+};
 
 router
   .route('/')
@@ -30,12 +34,8 @@ router
       body('projectId').notEmpty().withMessage('Project is required'),
       body('categoryId').notEmpty().withMessage('Category is required'),
       body('itemName').notEmpty().withMessage('Item name is required'),
-      body('quantity')
-        .isNumeric()
-        .withMessage('Quantity must be a number'),
-      body('rate')
-        .isNumeric()
-        .withMessage('Rate must be a number'),
+      body('quantity').isNumeric().withMessage('Quantity must be a number'),
+      body('rate').isNumeric().withMessage('Rate must be a number'),
       body('date').notEmpty().withMessage('Date is required'),
     ],
     createExpense

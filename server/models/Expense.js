@@ -113,22 +113,20 @@ const expenseSchema = new mongoose.Schema(
 );
 
 // Pre-save: calculate total if not set
-expenseSchema.pre('save', function (next) {
+expenseSchema.pre('save', function () {
   if (this.quantity && this.rate) {
     this.totalAmount = this.quantity * this.rate;
   }
-  next();
 });
 
 // Pre-update: recalculate total
-expenseSchema.pre('findOneAndUpdate', function (next) {
+expenseSchema.pre('findOneAndUpdate', function () {
   const update = this.getUpdate();
   if (update.quantity !== undefined && update.rate !== undefined) {
     update.totalAmount = update.quantity * update.rate;
   } else if (update.quantity !== undefined || update.rate !== undefined) {
     // Will be handled in controller with full doc
   }
-  next();
 });
 
 // Indexes for common queries
