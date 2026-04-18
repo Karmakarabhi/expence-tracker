@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@theme {
+  --color-primary-500: #3b82f6;
+  --color-surface-50: #f8fafc;
+  --color-text-900: #0f172a;
+}
+body { background: var(--color-surface-50); color: var(--color-text-900); }
