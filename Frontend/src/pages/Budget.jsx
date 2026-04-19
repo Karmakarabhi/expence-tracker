@@ -43,7 +43,7 @@ export default function Budget() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Budget Management</h1>
       </div>
 

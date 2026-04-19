@@ -51,11 +51,11 @@ export default function ExpenseList() {
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Expenses</h2>
         <button
           onClick={() => navigate("/expenses/new")}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2"
+          className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center justify-center gap-2"
         >
           <span>+</span> Add Expense
         </button>
