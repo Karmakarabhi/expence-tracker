@@ -7,7 +7,8 @@ import {
   Tags,
   Wallet,
   PieChart,
-  LogOut
+  LogOut,
+  TrendingUp,
 } from 'lucide-react';
 
 export default function Layout() {
@@ -21,6 +22,9 @@ export default function Layout() {
     { name: 'Categories', path: '/categories', icon: Tags, shortName: 'Categories' },
     { name: 'Budget', path: '/budget', icon: Wallet, shortName: 'Budget' },
     { name: 'Reports', path: '/reports', icon: PieChart, shortName: 'Reports' },
+    { name: 'Investments', path: '/portfolio', icon: TrendingUp, shortName: 'Invest' },
+    { name: 'Analytics', path: '/portfolio/analytics', icon: PieChart, shortName: 'Analytics' },
+    { name: 'History', path: '/portfolio/transactions', icon: TrendingUp, shortName: 'History' },
   ];
 
   return (

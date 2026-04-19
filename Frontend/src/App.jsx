@@ -11,6 +11,11 @@ import Categories from './pages/Categories';
 import Budget from './pages/Budget';
 import Reports from './pages/Reports';
 import ProjectDetails from './pages/ProjectDetails';
+import { PortfolioProvider } from './context/PortfolioContext';
+import PortfolioDashboard from './pages/Portfolio/PortfolioDashboard';
+import HoldingsList from './pages/Portfolio/HoldingsList';
+import TransactionHistory from './pages/Portfolio/TransactionHistory';
+import PortfolioAnalytics from './pages/Portfolio/PortfolioAnalytics';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -30,6 +35,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <PortfolioProvider>
         <Toaster position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -46,8 +52,13 @@ function App() {
             <Route path="categories" element={<Categories />} />
             <Route path="budget" element={<Budget />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="portfolio" element={<PortfolioDashboard />} />
+            <Route path="portfolio/holdings" element={<HoldingsList />} />
+            <Route path="portfolio/transactions" element={<TransactionHistory />} />
+            <Route path="portfolio/analytics" element={<PortfolioAnalytics />} />
           </Route>
         </Routes>
+        </PortfolioProvider>
       </AuthProvider>
     </BrowserRouter>
   )

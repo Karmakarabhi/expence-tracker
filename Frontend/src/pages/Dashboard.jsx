@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
+import NetWorthWidget from '../components/dashboard/NetWorthWidget';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -36,6 +37,10 @@ export default function Dashboard() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+      </div>
+
+      <div className="w-full mb-6">
+         <NetWorthWidget expenseSummary={{ remaining: data?.totalAmount || 0 }} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
