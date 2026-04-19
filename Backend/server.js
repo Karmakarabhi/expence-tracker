@@ -45,6 +45,11 @@ app.use('/api/projects', require('./routes/projects'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/portfolios', require('./routes/portfolios'));
+app.use('/api/holdings', require('./routes/holdings'));
+app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/mf', require('./routes/mfSearch'));
+app.use('/api/mf', require('./routes/mfSearch'));
 
 // Health check
 app.get('/api/health', (req, res) => {

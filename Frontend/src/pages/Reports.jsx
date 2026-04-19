@@ -1,21 +1,66 @@
+import { usePortfolio } from "../context/PortfolioContext";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileDown, FileSpreadsheet, BarChart3, PieChart, Users } from "lucide-react";
+
 export default function Reports() {
+  const { activePortfolio } = usePortfolio();
+
+  const handleExportPDF = () => {
+    if (activePortfolio) {
+      window.open(`http://localhost:5000/api/portfolios/${activePortfolio._id}/report/pdf`);
+    }
+  };
+
+  const handleExportExcel = () => {
+    if (activePortfolio) {
+      window.open(`http://localhost:5000/api/portfolios/${activePortfolio._id}/report/excel`);
+    }
+  };
+
+  const reportTypes = [
+    { name: "Monthly Expenses", description: "Breakdown of spending by month", icon: BarChart3 },
+    { name: "Category Distribution", description: "Where your money goes", icon: PieChart },
+    { name: "Supplier Summary", description: "Top vendors and contractors", icon: Users },
+  ];
+
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Reports & Analytics</h2>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button className="flex-1 sm:flex-none bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 text-center">Export PDF</button>
-          <button className="flex-1 sm:flex-none bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-center">Export Excel</button>
-        </div>
+    <div className="max-w-5xl mx-auto">
+      <PageHeader
+        title="Reports"
+        description="Generate & export analytical reports."
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+              <FileDown className="h-4 w-4" /> PDF
+            </Button>
+            <Button size="sm" onClick={handleExportExcel} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              <FileSpreadsheet className="h-4 w-4" /> Excel
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+        {reportTypes.map((report) => (
+          <Card key={report.name} className="p-6 cursor-pointer hover:shadow-md transition-shadow group">
+            <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <report.icon className="h-5 w-5" />
+            </div>
+            <h3 className="font-semibold mb-1">{report.name}</h3>
+            <p className="text-sm text-muted-foreground">{report.description}</p>
+          </Card>
+        ))}
       </div>
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500 py-10 md:py-20">
-        <p className="text-lg">Select a report type to generate statistics and charts.</p>
-        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-          <button className="px-6 py-3 bg-blue-50 text-blue-600 font-medium rounded-lg">Monthly Expenses</button>
-          <button className="px-6 py-3 bg-blue-50 text-blue-600 font-medium rounded-lg">Category Distribution</button>
-          <button className="px-6 py-3 bg-blue-50 text-blue-600 font-medium rounded-lg">Supplier Summary</button>
-        </div>
-      </div>
+
+      <Card className="mt-6 p-10 text-center">
+        <p className="text-muted-foreground text-sm">
+          Select a report type above to generate charts and statistics.
+          <br />
+          Export portfolio reports using the PDF / Excel buttons.
+        </p>
+      </Card>
     </div>
   );
 }

@@ -376,3 +376,96 @@ exports.getPaymentStatusReport = async (req, res, next) => {
     next(error);
   }
 };
+
+const Portfolio = require('../models/Portfolio');
+const Holding = require('../models/Holding');
+const InvestmentTransaction = require('../models/Transaction');
+const jsPDF = require('jspdf').jsPDF;
+require('jspdf-autotable');
+const XLSX = require('xlsx');
+
+exports.addPortfolioPdf = async (req, res, next) => {
+  try {
+    const portfolio = await Portfolio.findById(req.params.id);
+    if (!portfolio || portfolio.userId.toString() !== req.user.id) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const holdings = await Holding.find({ portfolioId: portfolio._id });
+
+    const doc = new jsPDF();
+    doc.text(`Portfolio Report: ${portfolio.name}`, 14, 15);
+    
+    const tableData = holdings.map(h => [
+      h.name,
+      h.category,
+      h.units.toFixed(2),
+      h.avgCost.toFixed(2),
+      h.currentNav.toFixed(2),
+      (h.units * h.currentNav).toFixed(2),
+      ((h.units * h.currentNav) - (h.units * h.avgCost)).toFixed(2)
+    ]);
+
+    doc.autoTable({
+      startY: 25,
+      head: [['Fund Name', 'Category', 'Units', 'Avg Cost', 'Current NAV', 'Value', 'Gain/Loss']],
+      body: tableData,
+    });
+
+    const pdfBuffer = doc.output('arraybuffer');
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=portfolio-${portfolio._id}.pdf`);
+    res.send(Buffer.from(pdfBuffer));
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addPortfolioExcel = async (req, res, next) => {
+  try {
+    const portfolio = await Portfolio.findById(req.params.id);
+    if (!portfolio || portfolio.userId.toString() !== req.user.id) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const holdings = await Holding.find({ portfolioId: portfolio._id }).lean();
+    const transactions = await InvestmentTransaction.find({ portfolioId: portfolio._id }).lean();
+
+    const wb = XLSX.utils.book_new();
+    
+    const holdingsData = holdings.map(h => ({
+      'Fund Name': h.name,
+      'Category': h.category,
+      'Units': h.units,
+      'Avg Cost': h.avgCost,
+      'Current NAV': h.currentNav,
+      'Current Value': h.units * h.currentNav,
+      'Total Invested': h.units * h.avgCost,
+      'Gain/Loss': (h.units * h.currentNav) - (h.units * h.avgCost)
+    }));
+    
+    const wsHoldings = XLSX.utils.json_to_sheet(holdingsData);
+    XLSX.utils.book_append_sheet(wb, wsHoldings, 'Holdings');
+
+    const txData = transactions.map(t => ({
+      'Date': t.date.toISOString().split('T')[0],
+      'Type': t.type,
+      'Units': t.units,
+      'NAV': t.nav,
+      'Amount': t.amount,
+      'Notes': t.notes
+    }));
+
+    const wsTx = XLSX.utils.json_to_sheet(txData);
+    XLSX.utils.book_append_sheet(wb, wsTx, 'Transactions');
+
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=portfolio-${portfolio._id}.xlsx`);
+    res.send(buf);
+  } catch (error) {
+    next(error);
+  }
+};
