@@ -3,12 +3,23 @@ import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Plus, Download, Filter } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function ExpenseList() {
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCat, setSelectedCat] = useState("all");
 
   useEffect(() => {
     fetchExpenses();
@@ -40,8 +51,8 @@ export default function ExpenseList() {
       await api.put(`/expenses/${id}`, { paymentStatus: newStatus });
       setExpenses(
         expenses.map((exp) =>
-          exp._id === id ? { ...exp, paymentStatus: newStatus } : exp,
-        ),
+          exp._id === id ? { ...exp, paymentStatus: newStatus } : exp
+        )
       );
       toast.success("Status updated successfully");
     } catch (err) {
@@ -49,153 +60,125 @@ export default function ExpenseList() {
     }
   };
 
+  const filtered = expenses.filter((e) => {
+    const matchQ = (e.itemName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (e.supplierName || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchC = selectedCat === "all" || e.categoryId?._id === selectedCat;
+    return matchQ && matchC;
+  });
+
   return (
-    <div className="animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Expenses</h2>
-        <button
-          onClick={() => navigate("/expenses/new")}
-          className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center justify-center gap-2"
-        >
-          <span>+</span> Add Expense
-        </button>
-      </div>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Search expenses by item, supplier..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.icon} {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="text-center py-10 text-gray-500">
-              Loading expenses...
-            </div>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Project
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Item
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quantity
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {expenses.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan="7"
-                      className="px-6 py-8 text-center text-gray-500"
-                    >
-                      No expenses found. Click 'Add Expense' to create one.
-                    </td>
-                  </tr>
-                ) : (
-                  expenses.map((exp) => (
-                    <tr
-                      key={exp._id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {format(new Date(exp.date), "MMM dd, yyyy")}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {exp.projectId?.name || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {exp.itemName}
-                        {exp.supplierName && (
-                          <div className="text-xs text-gray-500 font-normal">
-                            from {exp.supplierName}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {exp.quantity} {exp.unit} @ $
-                        {exp.rate?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className="px-2 py-1 bg-gray-100 font-medium text-gray-800 rounded-full text-xs whitespace-nowrap">
-                          {exp.categoryId?.icon} {exp.categoryId?.name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                        $
-                        {exp.totalAmount.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <select
-                          value={exp.paymentStatus}
-                          onChange={(e) =>
-                            handleStatusChange(exp._id, e.target.value)
-                          }
-                          className={`text-xs font-medium px-2 py-1 rounded-full cursor-pointer focus:outline-none transition-colors ${
-                            exp.paymentStatus === "paid"
-                              ? "bg-green-50 text-green-600 border border-green-100 hover:bg-green-100"
-                              : "bg-yellow-50 text-yellow-600 border border-yellow-100 hover:bg-yellow-100"
-                          }`}
-                        >
-                          <option
-                            value="paid"
-                            className="bg-white text-gray-900"
-                          >
-                            Paid
-                          </option>
-                          <option
-                            value="pending"
-                            className="bg-white text-gray-900"
-                          >
-                            Pending
-                          </option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-        {!loading && expenses.length > 0 && (
-          <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
-            <span>Showing {expenses.length} expenses</span>
+    <div className="max-w-7xl mx-auto">
+      <PageHeader
+        title="Expenses"
+        description={`${filtered.length} transactions`}
+        actions={
+          <>
+            <Button variant="outline" size="sm"><Download className="h-4 w-4" /> Export</Button>
+            <Button asChild size="sm"><Link to="/expenses/new"><Plus className="h-4 w-4" /> Add</Link></Button>
+          </>
+        }
+      />
+
+      <Card className="p-4 mb-4">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by item, supplier…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
           </div>
+          <Select value={selectedCat} onValueChange={setSelectedCat}>
+            <SelectTrigger className="md:w-56">
+              <Filter className="h-4 w-4" />
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat._id} value={cat._id}>{cat.icon} {cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      <Card>
+        {loading ? (
+          <div className="p-8 text-center text-muted-foreground">Loading expenses...</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Project</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No expenses found. Click 'Add' to create one.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((exp) => (
+                  <TableRow key={exp._id}>
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(exp.date), "MMM dd, yyyy")}
+                    </TableCell>
+                    <TableCell>{exp.projectId?.name || "N/A"}</TableCell>
+                    <TableCell>
+                      <p className="font-medium">{exp.itemName}</p>
+                      {exp.supplierName && (
+                        <p className="text-xs text-muted-foreground">from {exp.supplierName}</p>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {exp.quantity} {exp.unit} @ ₹{exp.rate?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="font-normal gap-1.5">
+                        {exp.categoryId?.icon} {exp.categoryId?.name}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      ₹{exp.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell>
+                      <select
+                        value={exp.paymentStatus}
+                        onChange={(e) => handleStatusChange(exp._id, e.target.value)}
+                        className={`text-xs font-medium px-2 py-1 rounded-full cursor-pointer focus:outline-none transition-colors ${
+                          exp.paymentStatus === "paid"
+                            ? "bg-accent-soft text-accent-soft-foreground"
+                            : "bg-warning-soft text-warning-soft-foreground"
+                        }`}
+                      >
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                      </select>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         )}
-      </div>
+      </Card>
+      {!loading && filtered.length > 0 && (
+        <div className="mt-4 text-sm text-muted-foreground">
+          Showing {filtered.length} expenses
+        </div>
+      )}
     </div>
   );
 }

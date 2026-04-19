@@ -3,6 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Sparkles } from 'lucide-react';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -32,34 +37,46 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">{isLogin ? 'Sign in to your account' : 'Create an account'}</h2>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center space-y-2">
+          <div className="mx-auto h-12 w-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {isLogin ? 'Welcome back' : 'Create account'}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {isLogin ? 'Sign in to your Finlight account.' : 'Get started with Finlight.'}
+          </p>
+        </div>
+        <Card className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div>
-                <input name="name" type="text" required className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} />
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input id="name" type="text" placeholder="John Doe" required value={name} onChange={e => setName(e.target.value)} />
               </div>
             )}
-            <div>
-              <input name="email" type="email" required className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 ${isLogin ? 'rounded-t-md' : ''} focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`} placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
             </div>
-            <div>
-              <input name="password" type="password" required className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" placeholder="••••••••" required value={password} onChange={e => setPassword(e.target.value)} />
             </div>
-          </div>
-          <div>
-            <button type="submit" className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              {isLogin ? 'Sign in' : 'Register'}
-            </button>
-          </div>
-          <div className="text-center text-sm">
-             <button type="button" onClick={() => setIsLogin(!isLogin)} className="font-medium text-blue-600 hover:text-blue-500">
-                {isLogin ? 'Need an account? Register' : 'Already have an account? Sign in'}
-             </button>
-          </div>
-        </form>
+            <Button type="submit" className="w-full">
+              {isLogin ? 'Sign in' : 'Create account'}
+            </Button>
+          </form>
+        </Card>
+        <p className="text-xs text-center text-muted-foreground">
+          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-foreground underline-offset-4 hover:underline font-medium">
+            {isLogin ? 'Sign up' : 'Sign in'}
+          </button>
+        </p>
       </div>
     </div>
   );

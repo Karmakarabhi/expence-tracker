@@ -1,17 +1,33 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { PortfolioContext } from '../../context/PortfolioContext';
 import { getTransactionsByPortfolio, deleteTransaction } from '../../api/transactionApi';
-import { Trash2 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import { Trash2, Filter } from 'lucide-react';
+
+const typeStyles = {
+    BUY: "bg-info-soft text-info-soft-foreground",
+    SIP: "bg-accent-soft text-accent-soft-foreground",
+    DIVIDEND: "bg-accent-soft text-accent-soft-foreground",
+    SELL: "bg-destructive-soft text-destructive-soft-foreground",
+    SWITCH_IN: "bg-info-soft text-info-soft-foreground",
+    SWITCH_OUT: "bg-warning-soft text-warning-soft-foreground",
+};
 
 const TransactionHistory = () => {
     const { activePortfolio } = useContext(PortfolioContext);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [typeFilter, setTypeFilter] = useState("all");
 
     useEffect(() => {
-        if (activePortfolio) {
-            fetchTransactions(activePortfolio._id);
-        }
+        if (activePortfolio) fetchTransactions(activePortfolio._id);
     }, [activePortfolio]);
 
     const fetchTransactions = async (portfolioId) => {
@@ -27,81 +43,91 @@ const TransactionHistory = () => {
     };
 
     const handleDelete = async (id) => {
-        if(window.confirm('Delete this transaction? It will automatically recalculate the holding units and average cost.')){
+        if (window.confirm('Delete this transaction? It will automatically recalculate the holding units and average cost.')) {
             try {
                 await deleteTransaction(id);
                 fetchTransactions(activePortfolio._id);
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }
-    }
-
-    if (!activePortfolio) return <div className="p-4 text-center">Select a portfolio</div>;
-
-    const renderBadge = (type) => {
-        const colorMap = {
-            'BUY': 'bg-green-100 text-green-800',
-            'SIP': 'bg-blue-100 text-blue-800',
-            'DIVIDEND': 'bg-purple-100 text-purple-800',
-            'SELL': 'bg-red-100 text-red-800',
-            'SWITCH_IN': 'bg-indigo-100 text-indigo-800',
-            'SWITCH_OUT': 'bg-orange-100 text-orange-800'
-        };
-        const defaultColor = 'bg-gray-100 text-gray-800';
-        return <span className={`px-2 py-1 text-xs rounded-full font-medium ${colorMap[type] || defaultColor}`}>{type}</span>;
     };
 
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Transaction History</h1>
-            </div>
+    if (!activePortfolio) return <Card className="p-8 text-center text-muted-foreground">Select a portfolio</Card>;
 
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+    const filtered = transactions.filter(t => typeFilter === "all" || t.type === typeFilter);
+
+    return (
+        <div className="max-w-7xl mx-auto space-y-4">
+            <PageHeader
+                title="Transaction History"
+                description="Buy, sell and SIP order history."
+            />
+
+            <Card className="p-4">
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="md:w-56">
+                        <Filter className="h-4 w-4" />
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All types</SelectItem>
+                        <SelectItem value="BUY">Buy</SelectItem>
+                        <SelectItem value="SIP">SIP</SelectItem>
+                        <SelectItem value="SELL">Sell</SelectItem>
+                        <SelectItem value="DIVIDEND">Dividend</SelectItem>
+                        <SelectItem value="SWITCH_IN">Switch In</SelectItem>
+                        <SelectItem value="SWITCH_OUT">Switch Out</SelectItem>
+                    </SelectContent>
+                </Select>
+            </Card>
+
+            <Card>
                 {loading ? (
-                    <div className="p-8 text-center text-gray-500">Loading history...</div>
-                ) : transactions.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500">No transactions recorded yet.</div>
+                    <div className="p-8 text-center text-muted-foreground">Loading history...</div>
+                ) : filtered.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">No transactions recorded yet.</div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
-                                    <th className="p-4 font-medium">Date</th>
-                                    <th className="p-4 font-medium">Type</th>
-                                    <th className="p-4 font-medium">Units</th>
-                                    <th className="p-4 font-medium">NAV</th>
-                                    <th className="p-4 font-medium">Value (₹)</th>
-                                    <th className="p-4 font-medium text-right">Delete</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 text-sm">
-                                {transactions.map((tx) => (
-                                    <tr key={tx._id} className="hover:bg-gray-50 transition">
-                                        <td className="p-4 text-gray-600">
-                                            {new Date(tx.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="p-4">
-                                            {renderBadge(tx.type)}
-                                        </td>
-                                        <td className="p-4 text-gray-600">
-                                            {['SELL', 'SWITCH_OUT'].includes(tx.type) ? '-' : '+'}{tx.units.toFixed(4)}
-                                        </td>
-                                        <td className="p-4 text-gray-600">₹{tx.nav.toFixed(2)}</td>
-                                        <td className="p-4 font-medium text-gray-800">₹{tx.amount.toFixed(2)}</td>
-                                        <td className="p-4 text-right">
-                                            <button onClick={() => handleDelete(tx._id)} className="text-red-500 hover:text-red-700">
-                                                <Trash2 className="w-4 h-4 ml-auto" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead className="text-right">Units</TableHead>
+                                <TableHead className="text-right">NAV</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                                <TableHead className="text-right">Delete</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filtered.map((tx) => (
+                                <TableRow key={tx._id}>
+                                    <TableCell className="text-muted-foreground">
+                                        {formatDate(tx.date)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge className={cn("font-normal", typeStyles[tx.type] || "bg-secondary text-secondary-foreground")}>
+                                            {tx.type}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums">
+                                        {['SELL', 'SWITCH_OUT'].includes(tx.type) ? '-' : '+'}{tx.units.toFixed(4)}
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums">₹{tx.nav.toFixed(2)}</TableCell>
+                                    <TableCell className={cn("text-right tabular-nums font-semibold", tx.type === 'SELL' ? "text-destructive" : "text-foreground")}>
+                                        {tx.type === 'SELL' ? '−' : '+'}{formatCurrency(tx.amount)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(tx._id)}>
+                                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 )}
-            </div>
+            </Card>
         </div>
     );
 };

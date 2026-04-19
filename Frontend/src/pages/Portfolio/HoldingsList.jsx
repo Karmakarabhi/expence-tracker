@@ -1,10 +1,18 @@
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { PortfolioContext } from '../../context/PortfolioContext';
 import { getHoldings, deleteHolding } from '../../api/portfolioApi';
 import { refreshPortfolioPrices } from '../../api/mfApi';
-import { Plus, Trash2, Edit, FileText, RefreshCw } from 'lucide-react';
 import TransactionModal from '../../components/portfolio/TransactionModal';
 import AddHoldingModal from '../../components/portfolio/AddHoldingModal';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/formatters';
+import { Plus, RefreshCw, Trash2, FileText, Search } from 'lucide-react';
 
 const HoldingsList = () => {
     const { activePortfolio } = useContext(PortfolioContext);
@@ -13,11 +21,10 @@ const HoldingsList = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [selectedHoldingForTx, setSelectedHoldingForTx] = useState(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        if (activePortfolio) {
-            fetchHoldings(activePortfolio._id);
-        }
+        if (activePortfolio) fetchHoldings(activePortfolio._id);
     }, [activePortfolio]);
 
     const fetchHoldings = async (portfolioId) => {
@@ -56,97 +63,111 @@ const HoldingsList = () => {
     };
 
     if (!activePortfolio) {
-        return <div className="p-4 text-center text-gray-500">Select a portfolio to view holdings</div>;
+        return <Card className="p-8 text-center text-muted-foreground">Select a portfolio to view holdings</Card>;
     }
 
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-                <h1 className="text-2xl font-bold text-gray-800">Your Holdings</h1>
-                <div className="flex gap-3">
-                    <button 
-                        onClick={handleRefreshPrices} 
-                        disabled={refreshing}
-                        className="flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
-                    >
-                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> 
-                        {refreshing ? 'Updating...' : 'Refresh Nav'}
-                    </button>
-                    <button 
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                    >
-                        <Plus className="w-4 h-4" /> Add Holding
-                    </button>
-                </div>
-            </div>
+    const filtered = holdings.filter(h =>
+        (h.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+    return (
+        <div className="max-w-7xl mx-auto space-y-4">
+            <PageHeader
+                title="Holdings"
+                description={`${filtered.length} active holdings`}
+                actions={
+                    <>
+                        <Button variant="outline" size="sm" onClick={handleRefreshPrices} disabled={refreshing}>
+                            <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
+                            {refreshing ? 'Updating…' : 'Refresh NAV'}
+                        </Button>
+                        <Button size="sm" onClick={() => setIsAddModalOpen(true)}>
+                            <Plus className="h-4 w-4" /> Add Holding
+                        </Button>
+                    </>
+                }
+            />
+
+            <Card className="p-4">
+                <div className="relative max-w-md">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search holdings…"
+                        className="pl-9"
+                    />
+                </div>
+            </Card>
+
+            <Card>
                 {loading ? (
-                    <div className="p-8 text-center text-gray-500">Loading holdings...</div>
-                ) : holdings.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500">
+                    <div className="p-8 text-center text-muted-foreground">Loading holdings...</div>
+                ) : filtered.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
                         <p>No investments found in this portfolio.</p>
                         <p className="text-sm mt-2">Click "Add Holding" to start tracking.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
-                                    <th className="p-4 font-medium">Name</th>
-                                    <th className="p-4 font-medium">Type</th>
-                                    <th className="p-4 font-medium">Units</th>
-                                    <th className="p-4 font-medium">Avg Cost</th>
-                                    <th className="p-4 font-medium">Current NAV</th>
-                                    <th className="p-4 font-medium">Value</th>
-                                    <th className="p-4 font-medium text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {holdings.map((holding) => {
-                                    const value = holding.units * holding.currentNav;
-                                    return (
-                                        <tr key={holding._id} className="hover:bg-gray-50 transition">
-                                            <td className="p-4 font-medium text-gray-800">{holding.name}</td>
-                                            <td className="p-4 text-sm text-gray-600">
-                                                <span className="px-2 py-1 bg-gray-100 rounded text-xs">{holding.type}</span>
-                                            </td>
-                                            <td className="p-4 text-gray-600">{holding.units.toFixed(2)}</td>
-                                            <td className="p-4 text-gray-600">₹{holding.avgCost.toFixed(2)}</td>
-                                            <td className="p-4 text-gray-600">₹{holding.currentNav.toFixed(2)}</td>
-                                            <td className="p-4 font-medium text-gray-800">₹{value.toFixed(2)}</td>
-                                            <td className="p-4 text-right">
-                                            <div className="flex justify-end gap-3">
-                                                <button onClick={() => alert("To edit the name or type, please contact support. Unites/Cost must be updated via Transactions.")} className="text-blue-600 hover:text-blue-800" title="Edit Holding">
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={() => setSelectedHoldingForTx(holding)} className="text-green-600 hover:text-green-800 ml-2" title="Add Transaction (Buy/Sell)">
-                                                    <FileText className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={() => handleDelete(holding._id)} className="text-red-500 hover:text-red-700 ml-2" title="Delete Holding">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Fund</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead className="text-right">Units</TableHead>
+                                <TableHead className="text-right">Avg Cost</TableHead>
+                                <TableHead className="text-right">Current NAV</TableHead>
+                                <TableHead className="text-right">Value</TableHead>
+                                <TableHead className="text-right">Returns</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filtered.map((holding) => {
+                                const value = holding.units * holding.currentNav;
+                                const invested = holding.units * holding.avgCost;
+                                const returnsPct = invested > 0 ? ((value - invested) / invested) * 100 : 0;
+                                return (
+                                    <TableRow key={holding._id}>
+                                        <TableCell>
+                                            <p className="font-medium">{holding.name}</p>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="secondary" className="font-normal">{holding.type}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums">{holding.units.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right tabular-nums">₹{holding.avgCost.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right tabular-nums">₹{holding.currentNav.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right tabular-nums font-medium">{formatCurrency(value)}</TableCell>
+                                        <TableCell className={cn("text-right tabular-nums font-semibold", returnsPct >= 0 ? "text-accent" : "text-destructive")}>
+                                            {returnsPct >= 0 ? '+' : ''}{returnsPct.toFixed(1)}%
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-1">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedHoldingForTx(holding)} title="Add Transaction">
+                                                    <FileText className="h-3.5 w-3.5 text-accent" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(holding._id)} title="Delete">
+                                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                                </Button>
                                             </div>
-                                        </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
                 )}
-            </div>
+            </Card>
 
-            <TransactionModal 
+            <TransactionModal
                 isOpen={!!selectedHoldingForTx}
                 holding={selectedHoldingForTx}
                 onClose={() => setSelectedHoldingForTx(null)}
                 onSuccess={() => fetchHoldings(activePortfolio._id)}
             />
-            
-            <AddHoldingModal 
-                isOpen={isAddModalOpen} 
+            <AddHoldingModal
+                isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onSuccess={() => fetchHoldings(activePortfolio._id)}
             />

@@ -1,10 +1,19 @@
-import React, { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { PortfolioContext } from '../../context/PortfolioContext';
 import CreateProfileModal from '../../components/portfolio/CreateProfileModal';
 import { getPortfolioAnalytics } from '../../api/transactionApi';
 import { getHoldings } from '../../api/portfolioApi';
 import { Link } from 'react-router-dom';
-import { PieChart, TrendingUp, Presentation, Plus, AlertTriangle } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { MetricCard } from '@/components/dashboard/MetricCard';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatCurrency, formatPct } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
+import { Wallet, TrendingUp, Target, Plus, AlertTriangle, PieChart, Presentation } from 'lucide-react';
 
 const PortfolioDashboard = () => {
     const { activePortfolio, loading, portfolios } = useContext(PortfolioContext);
@@ -21,23 +30,36 @@ const PortfolioDashboard = () => {
                 .catch(err => console.error("Error fetching analytics", err));
             getHoldings(activePortfolio._id)
                 .then(res => setHoldings(res.data || []))
-                .catch(err => console.error("Error fetching analytics", err))
+                .catch(err => console.error("Error fetching holdings", err))
                 .finally(() => setFetchingData(false));
         }
     }, [activePortfolio]);
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Loading Portfolio...</div>;
+    if (loading) {
+        return (
+            <div className="max-w-7xl mx-auto space-y-6">
+                <Skeleton className="h-10 w-64" />
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {[1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
+                </div>
+            </div>
+        );
+    }
 
     if (!activePortfolio) {
         return (
-            <div className="p-8 text-center bg-white rounded-xl shadow-sm border border-slate-200 mt-6 max-w-2xl mx-auto">
-                <Presentation className="w-16 h-16 text-indigo-200 mx-auto mb-4" />
-                <h1 className="text-2xl font-bold text-slate-800 mb-2">Welcome to Investments</h1>
-                <p className="text-slate-500 mb-6">You don't have any investment portfolios yet. Create one to get started tracking your assets.</p>
-                <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg shadow-sm hover:bg-indigo-700 transition flex items-center justify-center gap-2 mx-auto font-medium">
-                    <Plus className="w-4 h-4" /> Create Portfolio
-                </button>
-                <CreateProfileModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <div className="max-w-2xl mx-auto mt-12">
+                <Card className="p-10 text-center">
+                    <Presentation className="w-14 h-14 text-muted-foreground/40 mx-auto mb-4" />
+                    <h1 className="text-2xl font-semibold mb-2">Welcome to Investments</h1>
+                    <p className="text-muted-foreground mb-6">
+                        You don't have any investment portfolios yet. Create one to get started tracking your assets.
+                    </p>
+                    <Button onClick={() => setIsModalOpen(true)}>
+                        <Plus className="h-4 w-4" /> Create Portfolio
+                    </Button>
+                    <CreateProfileModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+                </Card>
             </div>
         );
     }
@@ -52,26 +74,28 @@ const PortfolioDashboard = () => {
     });
 
     return (
-        <div className="p-4 md:p-6 space-y-6 max-w-6xl w-full mx-auto">
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div>
-                   <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Portfolio Summary</h1>
-                   <p className="text-slate-500 text-sm mt-1">Currently viewing <span className="font-semibold text-slate-700">{activePortfolio.name}</span> profile</p>
-                </div>
-                <button onClick={() => setIsModalOpen(true)} className="bg-white border border-slate-200 text-indigo-600 font-medium px-4 py-2 text-sm rounded-lg shadow-sm hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors">
-                    <Plus className="w-4 h-4" /> New Portfolio
-                </button>
-            </div>
-            
+        <div className="max-w-7xl mx-auto space-y-6">
+            <PageHeader
+                title="Portfolio Summary"
+                description={<>Currently viewing <span className="font-semibold text-foreground">{activePortfolio.name}</span> profile</>}
+                actions={
+                    <Button variant="outline" size="sm" onClick={() => setIsModalOpen(true)}>
+                        <Plus className="h-4 w-4" /> New Portfolio
+                    </Button>
+                }
+            />
+
             {upcomingMaturities.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between shadow-sm">
+                <Card className="p-4 border-warning/30 bg-warning-soft">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
-                            <AlertTriangle className="w-5 h-5" />
+                        <div className="p-2 bg-warning/20 rounded-lg">
+                            <AlertTriangle className="w-5 h-5 text-warning-soft-foreground" />
                         </div>
                         <div>
-                            <h3 className="text-amber-900 font-semibold">{upcomingMaturities.length} {upcomingMaturities.length === 1 ? 'Asset' : 'Assets'} Maturing Soon</h3>
-                            <p className="text-amber-700 text-sm mt-0.5">
+                            <h3 className="text-sm font-semibold text-warning-soft-foreground">
+                                {upcomingMaturities.length} {upcomingMaturities.length === 1 ? 'Asset' : 'Assets'} Maturing Soon
+                            </h3>
+                            <p className="text-xs text-warning-soft-foreground/80 mt-0.5">
                                 {upcomingMaturities.map(m => {
                                     const days = Math.ceil((new Date(m.maturityDate) - new Date()) / (1000 * 60 * 60 * 24));
                                     return `${m.name} in ${days} days (₹${(m.units * m.avgCost).toLocaleString('en-IN')})`;
@@ -79,45 +103,47 @@ const PortfolioDashboard = () => {
                             </p>
                         </div>
                     </div>
-                </div>
+                </Card>
             )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 shadow-sm rounded-xl border border-slate-200 border-l-4 border-l-indigo-500">
-                    <h2 className="text-xs text-slate-500 font-semibold mb-2 uppercase tracking-wider">Total Invested</h2>
-                    <p className="text-3xl font-bold text-slate-800">
-                        {fetchingData ? "..." : `₹${invested.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
-                    </p>
-                </div>
-                <div className="bg-white p-6 shadow-sm rounded-xl border border-slate-200 border-l-4 border-l-emerald-500">
-                    <h2 className="text-xs text-slate-500 font-semibold mb-2 uppercase tracking-wider">Current Value</h2>
-                    <p className="text-3xl font-bold text-slate-800">
-                        {fetchingData ? "..." : `₹${current.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
-                    </p>
-                </div>
-                <div className={`bg-white p-6 shadow-sm rounded-xl border border-slate-200 border-l-4 ${isPositiveGain ? 'border-l-emerald-500' : 'border-l-rose-500'}`}>
-                    <h2 className="text-xs text-slate-500 font-semibold mb-2 uppercase tracking-wider">Gain / Loss</h2>
-                    <p className={`text-3xl font-bold ${isPositiveGain ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {fetchingData ? "..." : `₹${Math.abs(absoluteGain).toLocaleString('en-IN', { maximumFractionDigits: 0 })} `}
-                        <span className="text-lg font-medium opacity-80">
-                           ({isPositiveGain?'+':''}{(gainPercent).toFixed(2)}%)
-                        </span>
-                    </p>
-                </div>
+
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                <MetricCard
+                    label="Total Invested"
+                    value={fetchingData ? "..." : formatCurrency(invested)}
+                    icon={Wallet}
+                />
+                <MetricCard
+                    label="Current Value"
+                    value={fetchingData ? "..." : formatCurrency(current)}
+                    icon={TrendingUp}
+                    accent="success"
+                />
+                <MetricCard
+                    label="Gain / Loss"
+                    value={fetchingData ? "..." : `${isPositiveGain ? '+' : '-'}${formatCurrency(Math.abs(absoluteGain))}`}
+                    delta={gainPercent}
+                    accent={isPositiveGain ? "success" : "warning"}
+                    icon={Target}
+                />
             </div>
 
-            <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 p-8 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-                <div>
-                   <h3 className="text-xl font-bold text-indigo-950 mb-2">Dive Deeper into Your Analytics</h3>
-                   <p className="text-indigo-800/80 max-w-lg mb-0 text-sm leading-relaxed">
-                     Navigate to your Analytics Board to view rich visual data including Asset Allocation Charts, Market Capitalization distributions, XIRR calculations, and dynamic goal tracking estimations.
-                   </p>
+            <Card className="p-6 bg-gradient-to-r from-secondary to-secondary/50">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                        <h3 className="text-lg font-semibold mb-1">Dive Deeper into Your Analytics</h3>
+                        <p className="text-sm text-muted-foreground max-w-lg">
+                            Navigate to your Analytics Board to view rich visual data including Asset Allocation Charts,
+                            Market Capitalization distributions, XIRR calculations, and dynamic goal tracking.
+                        </p>
+                    </div>
+                    <Button asChild>
+                        <Link to="/portfolio/analytics">
+                            <PieChart className="h-4 w-4" /> View Analytics
+                        </Link>
+                    </Button>
                 </div>
-                <Link to="/portfolio/analytics" className="whitespace-nowrap px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow flex items-center gap-2 transition-all">
-                    <PieChart className="w-5 h-5" /> View Analytics Dashboard
-                </Link>
-            </div>
-            
+            </Card>
+
             <CreateProfileModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </div>
     );

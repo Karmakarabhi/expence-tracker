@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
@@ -21,7 +22,12 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return <div className="h-screen flex justify-center items-center">Loading...</div>;
+    return (
+      <div className="h-screen flex flex-col justify-center items-center gap-3 bg-background text-foreground">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    );
   }
   
   if (!user) {
@@ -36,6 +42,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <PortfolioProvider>
+        <TooltipProvider>
         <Toaster position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -58,6 +65,7 @@ function App() {
             <Route path="portfolio/analytics" element={<PortfolioAnalytics />} />
           </Route>
         </Routes>
+        </TooltipProvider>
         </PortfolioProvider>
       </AuthProvider>
     </BrowserRouter>

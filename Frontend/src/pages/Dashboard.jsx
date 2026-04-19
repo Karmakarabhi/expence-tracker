@@ -3,6 +3,13 @@ import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import NetWorthWidget from '../components/dashboard/NetWorthWidget';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { MetricCard } from '@/components/dashboard/MetricCard';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Wallet, Receipt, Clock, ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -25,102 +32,107 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return <div className="animate-pulse space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>)}
+    return (
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
+        </div>
+        <Skeleton className="h-64 rounded-lg" />
       </div>
-      <div className="h-64 bg-gray-200 rounded-xl"></div>
-    </div>;
+    );
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard Overview</h1>
+          <p className="text-sm text-muted-foreground">Here's what's happening with your money today.</p>
+        </div>
+        <Button asChild>
+          <Link to="/expenses/new">
+            <Receipt className="h-4 w-4" /> Add expense
+          </Link>
+        </Button>
       </div>
 
-      <div className="w-full mb-6">
-         <NetWorthWidget expenseSummary={{ remaining: data?.totalAmount || 0 }} />
+      <div className="w-full">
+        <NetWorthWidget expenseSummary={{ remaining: data?.totalAmount || 0 }} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
-          <h3 className="text-sm font-medium text-gray-500 uppercase flex items-center justify-between">
-            Total Spent
-            <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">{data?.totalExpenses || 0} items</span>
-          </h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900">${data?.totalSpent?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-          <h3 className="text-sm font-medium text-gray-500 uppercase flex items-center justify-between">
-            This Month
-          </h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900">${data?.monthSpent?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
-          <h3 className="text-sm font-medium text-gray-500 uppercase flex items-center justify-between">
-            Pending Payments
-            <span className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full">{data?.pendingCount || 0} bills</span>
-          </h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900">${data?.pendingAmount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</p>
-        </div>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <MetricCard
+          label="Total Spent"
+          value={`₹${data?.totalSpent?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
+          deltaLabel={`${data?.totalExpenses || 0} items`}
+          icon={Wallet}
+          accent="info"
+        />
+        <MetricCard
+          label="This Month"
+          value={`₹${data?.monthSpent?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
+          icon={Receipt}
+          accent="success"
+        />
+        <MetricCard
+          label="Pending Payments"
+          value={`₹${data?.pendingAmount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
+          deltaLabel={`${data?.pendingCount || 0} bills`}
+          icon={Clock}
+          accent="warning"
+        />
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-bold mb-4">Recent Expenses</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {data?.recentExpenses?.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center text-gray-500">No expenses recorded yet.</td>
-                  </tr>
-                ) : (
-                  data?.recentExpenses?.slice(0, 5).map((expense) => (
-                    <tr key={expense._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{format(new Date(expense.date), 'MMM dd, yyyy')}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{expense.itemName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className="px-2 py-1 bg-blue-100 font-medium text-blue-800 rounded-full text-xs">
-                          {expense.categoryId?.icon} {expense.categoryId?.name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${expense.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+        <Card className="p-5 lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Recent Expenses</h3>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/expenses">View all <ArrowUpRight className="h-3 w-3" /></Link>
+            </Button>
           </div>
-        </div>
+          <div className="space-y-1">
+            {data?.recentExpenses?.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No expenses recorded yet.</p>
+            ) : (
+              data?.recentExpenses?.slice(0, 5).map((expense) => (
+                <div key={expense._id} className="flex items-center justify-between py-2.5 border-b last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-secondary flex items-center justify-center text-xs font-medium">
+                      {expense.categoryId?.icon || '📁'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{expense.itemName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {expense.categoryId?.name} · {format(new Date(expense.date), 'MMM dd, yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold">₹{expense.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-bold mb-4">Top Categories</h2>
+        <Card className="p-5">
+          <h3 className="text-sm font-semibold mb-4">Top Categories</h3>
           <div className="space-y-4">
             {data?.categoryTotals?.length === 0 ? (
-               <p className="text-gray-500 text-sm text-center py-4">No data available</p>
+              <p className="text-muted-foreground text-sm text-center py-4">No data available</p>
             ) : (
               data?.categoryTotals?.map((cat, index) => (
                 <div key={index} className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span>{cat.icon}</span>
-                    <span className="text-sm font-medium text-gray-700">{cat.name}</span>
+                    <span className="text-sm font-medium">{cat.name}</span>
                   </div>
-                  <span className="text-sm font-bold text-gray-900">${cat.total.toLocaleString()}</span>
+                  <span className="text-sm font-semibold">₹{cat.total.toLocaleString()}</span>
                 </div>
               ))
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
