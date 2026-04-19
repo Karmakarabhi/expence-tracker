@@ -59,14 +59,14 @@ export default function Budget() {
                   <p className="text-sm text-gray-500">{project.status}</p>
                 </div>
                 <div className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
-                  Total Budget: ${project.budget.toLocaleString()}
+                  Total Budget: ₹{project.budget.toLocaleString()}
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Spent: ${totalSpent.toLocaleString()}</span>
+                    <span className="text-gray-600">Spent: ₹{totalSpent.toLocaleString()}</span>
                     <span className={`font-medium ${textClass}`}>
                       {percentage.toFixed(1)}%
                     </span>
@@ -82,7 +82,7 @@ export default function Budget() {
                 <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                   <span className="text-sm text-gray-600">Remaining Balance:</span>
                   <span className={`font-bold ${remaining < 0 ? 'text-red-600' : 'text-gray-800'}`}>
-                    ${remaining.toLocaleString()}
+                    ₹{remaining.toLocaleString()}
                   </span>
                 </div>
               </div>
