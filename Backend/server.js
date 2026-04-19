@@ -3,11 +3,18 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
 // Load env vars
 dotenv.config();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Connect to database
 connectDB();
@@ -18,8 +25,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS
-app.use(cors());
+// CORS Setup
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Set this in Render dashboard
+  credentials: true
+}));
 
 // Dev logging
 if (process.env.NODE_ENV === 'development') {
