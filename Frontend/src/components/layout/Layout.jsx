@@ -1,3 +1,4 @@
+import ProfileSwitcher from "../portfolio/ProfileSwitcher";
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -23,6 +24,7 @@ export default function Layout() {
     { name: 'Budget', path: '/budget', icon: Wallet, shortName: 'Budget' },
     { name: 'Reports', path: '/reports', icon: PieChart, shortName: 'Reports' },
     { name: 'Investments', path: '/portfolio', icon: TrendingUp, shortName: 'Invest' },
+    { name: 'Holdings', path: '/portfolio/holdings', icon: TrendingUp, shortName: 'Holdings' },
     { name: 'Analytics', path: '/portfolio/analytics', icon: PieChart, shortName: 'Analytics' },
     { name: 'History', path: '/portfolio/transactions', icon: TrendingUp, shortName: 'History' },
   ];
@@ -79,7 +81,7 @@ export default function Layout() {
 
       <div className="flex flex-col flex-1 w-full md:w-0 overflow-hidden pb-16 md:pb-0">
         <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-white border-b border-gray-200 shrink-0">
-          <div className="text-lg font-semibold truncate sm:mr-4">Expense Tracker</div>
+          <div className="flex items-center gap-4"><div className="text-lg font-semibold truncate sm:mr-4 hidden sm:block">Expense Tracker</div><ProfileSwitcher /></div>
           <div className="flex items-center gap-2 md:gap-4 shrink-0">
             <span className="text-sm md:text-base hidden sm:inline-block font-medium text-gray-700">
               {user?.name || 'Admin'}

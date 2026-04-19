@@ -6,19 +6,30 @@ const { refreshCache } = require('./priceCacheController');
 
 exports.createPortfolio = async (req, res) => {
   try {
-    const { name, currency, color, isDefault } = req.body;
+    const { name, currency, color, isDefault, memberName, relation } = req.body;
+
+    if (!memberName) {
+      return res.status(400).json({ success: false, error: 'memberName is required' });
+    }
 
     // If this is set as default, unset others for this user
     if (isDefault) {
       await Portfolio.updateMany({ userId: req.user.id }, { isDefault: false });
+    } else {
+      const defaultExists = await Portfolio.findOne({ userId: req.user.id, isDefault: true });
+      if (!defaultExists) {
+        req.body.isDefault = true;
+      }
     }
 
     const portfolio = await Portfolio.create({
       userId: req.user.id,
       name,
+      memberName,
+      relation: relation || 'Self',
       currency: currency || 'INR',
       color: color || '#6366f1',
-      isDefault: isDefault || false,
+      isDefault: isDefault || (!await Portfolio.exists({ userId: req.user.id, isDefault: true })),
     });
 
     res.status(201).json({ success: true, data: portfolio });
@@ -40,17 +51,12 @@ exports.updatePortfolio = async (req, res) => {
   try {
     let portfolio = await Portfolio.findById(req.params.id);
 
-    if (!portfolio) {
-      return res.status(404).json({ success: false, error: 'Portfolio not found' });
+    if (!portfolio || portfolio.userId.toString() !== req.user.id) {
+      return res.status(404).json({ success: false, error: 'Portfolio not found or unauthorized' });
     }
 
-    if (portfolio.userId.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, error: 'Not authorized' });
-    }
-
-    // If making this one default, update others
     if (req.body.isDefault) {
-      await Portfolio.updateMany({ userId: req.user.id }, { isDefault: false });
+      await Portfolio.updateMany({ userId: req.user.id, _id: { $ne: req.params.id } }, { isDefault: false });
     }
 
     portfolio = await Portfolio.findByIdAndUpdate(req.params.id, req.body, {
@@ -68,16 +74,17 @@ exports.deletePortfolio = async (req, res) => {
   try {
     const portfolio = await Portfolio.findById(req.params.id);
 
-    if (!portfolio) {
-      return res.status(404).json({ success: false, error: 'Portfolio not found' });
+    if (!portfolio || portfolio.userId.toString() !== req.user.id) {
+      return res.status(404).json({ success: false, error: 'Portfolio not found or unauthorized' });
     }
 
-    if (portfolio.userId.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, error: 'Not authorized' });
+
+    const holdingCount = await Holding.countDocuments({ portfolioId: portfolio._id });
+    if (holdingCount > 0) {
+      return res.status(400).json({ success: false, error: 'Cannot delete a portfolio that has holdings. Remove all holdings first.' });
     }
 
     await portfolio.deleteOne();
-    // In a real app we would want to cascade delete holdings and transactions too
 
     res.status(200).json({ success: true, data: {} });
   } catch (error) {

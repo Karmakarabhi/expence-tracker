@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { PortfolioContext } from '../../context/PortfolioContext';
-import { getHoldings } from '../../api/portfolioApi';
+import { getHoldings, deleteHolding } from '../../api/portfolioApi';
 import { refreshPortfolioPrices } from '../../api/mfApi';
 import { Plus, Trash2, Edit, FileText, RefreshCw } from 'lucide-react';
 import TransactionModal from '../../components/portfolio/TransactionModal';
@@ -29,6 +29,17 @@ const HoldingsList = () => {
             console.error("Failed to fetch holdings", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (holdingId) => {
+        if (!window.confirm("Are you sure you want to delete this holding? This will permanently remove all associated transactions.")) return;
+        try {
+            await deleteHolding(holdingId);
+            fetchHoldings(activePortfolio._id);
+        } catch (error) {
+            console.error("Failed to delete holding", error);
+            alert("Error deleting holding. Please try again.");
         }
     };
 
@@ -106,18 +117,18 @@ const HoldingsList = () => {
                                             <td className="p-4 text-gray-600">₹{holding.currentNav.toFixed(2)}</td>
                                             <td className="p-4 font-medium text-gray-800">₹{value.toFixed(2)}</td>
                                             <td className="p-4 text-right">
-                                                <div className="flex justify-end gap-3">
-                                                    <button className="text-blue-600 hover:text-blue-800">
-                                                        <Edit className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={() => setSelectedHoldingForTx(holding)} className="text-green-600 hover:text-green-800 ml-2" title="Add Transaction">
-                                                        <FileText className="w-4 h-4" />
-                                                    </button>
-                                                    <button className="text-red-500 hover:text-red-700 ml-2">
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
+                                            <div className="flex justify-end gap-3">
+                                                <button onClick={() => alert("To edit the name or type, please contact support. Unites/Cost must be updated via Transactions.")} className="text-blue-600 hover:text-blue-800" title="Edit Holding">
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => setSelectedHoldingForTx(holding)} className="text-green-600 hover:text-green-800 ml-2" title="Add Transaction (Buy/Sell)">
+                                                    <FileText className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => handleDelete(holding._id)} className="text-red-500 hover:text-red-700 ml-2" title="Delete Holding">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
                                         </tr>
                                     );
                                 })}

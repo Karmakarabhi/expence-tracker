@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { getPortfolios } from '../api/portfolioApi';
+import { getPortfolios, createPortfolio as apiCreatePortfolio, setDefaultPortfolio as apiSetDefaultPortfolio } from '../api/portfolioApi';
 import { useAuth } from './AuthContext';
 
 export const PortfolioContext = createContext();
@@ -7,8 +7,17 @@ export const PortfolioContext = createContext();
 export const PortfolioProvider = ({ children }) => {
     const { user } = useAuth();
     const [portfolios, setPortfolios] = useState([]);
-    const [activePortfolio, setActivePortfolio] = useState(null);
+    const [activePortfolio, setActivePortfolioState] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const setActivePortfolio = (portfolio) => {
+        setActivePortfolioState(portfolio);
+        if (portfolio) {
+            localStorage.setItem('activePortfolioId', portfolio._id);
+        } else {
+            localStorage.removeItem('activePortfolioId');
+        }
+    };
 
     const fetchPortfolios = async () => {
         if (!user) {
@@ -18,11 +27,16 @@ export const PortfolioProvider = ({ children }) => {
         try {
             setLoading(true);
             const data = await getPortfolios();
-            setPortfolios(data.data || []);
+            const fetchedPortfolios = data.data || [];
+            setPortfolios(fetchedPortfolios);
             
-            if (data.data?.length > 0) {
-                const def = data.data.find(p => p.isDefault) || data.data[0];
-                setActivePortfolio(def);
+            if (fetchedPortfolios.length > 0) {
+                const savedId = localStorage.getItem('activePortfolioId');
+                let target = fetchedPortfolios.find(p => p._id === savedId);
+                if (!target) {
+                    target = fetchedPortfolios.find(p => p.isDefault) || fetchedPortfolios[0];
+                }
+                setActivePortfolio(target);
             } else {
                 setActivePortfolio(null);
             }
@@ -37,12 +51,26 @@ export const PortfolioProvider = ({ children }) => {
         fetchPortfolios();
     }, [user]);
 
+    const createPortfolio = async (formData) => {
+        const response = await apiCreatePortfolio(formData);
+        const newPortfolio = response.data;
+        setPortfolios(prev => [...prev, newPortfolio]);
+        return newPortfolio;
+    };
+
+    const setDefaultPortfolio = async (portfolioId) => {
+        await apiSetDefaultPortfolio(portfolioId);
+        await fetchPortfolios();
+    };
+
     return (
         <PortfolioContext.Provider value={{
             portfolios,
             setPortfolios,
             activePortfolio,
             setActivePortfolio,
+            createPortfolio,
+            setDefaultPortfolio,
             loading,
             refreshPortfolios: fetchPortfolios
         }}>

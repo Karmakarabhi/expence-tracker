@@ -12,6 +12,16 @@ const portfolioSchema = new mongoose.Schema(
       required: [true, 'Name is required'],
       trim: true,
     },
+    memberName: {
+      type: String,
+      required: [true, 'Member name is required'],
+      trim: true,
+    },
+    relation: {
+      type: String,
+      enum: ['Self', 'Father', 'Mother', 'Spouse', 'Child', 'Other'],
+      default: 'Self',
+    },
     currency: {
       type: String,
       default: 'INR',
