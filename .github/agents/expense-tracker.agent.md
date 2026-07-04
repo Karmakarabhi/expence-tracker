@@ -58,6 +58,15 @@ During this session, we confirmed the following backend capabilities already exi
 - A dedicated supplier report endpoint exists at `GET /api/reports/supplier`.
 - The system already supports project-based budgeting, category reporting, payment-status reporting, and receipt uploads.
 
+**NEW** — Attachment System (Expense Documents & Proofs):
+- Implemented polymorphic `Attachment` model supporting Expense and Transaction records.
+- Supports document categories: `purchase_invoice`, `deposit_slip`, `other`.
+- Backend API: POST/GET/DELETE routes for multi-file uploads with ownership validation.
+- Frontend components: `AttachmentUpload` (drag-drop) and `AttachmentList` (display/download).
+- Soft-delete design preserves audit trail; files retained on disk until manual cleanup.
+- Reuses existing multer config (10MB, image/PDF whitelist) from `Backend/middleware/upload.js`.
+- Ready for portfolio transaction payouts without schema rework (polymorphic relatedModel field).
+
 ## Important Domain Guidance
 - Treat supplier/provider tracking as a first-class reporting concern, but remember the current implementation uses free-text `supplierName` rather than a dedicated provider entity.
 - For investment features, distinguish between:
