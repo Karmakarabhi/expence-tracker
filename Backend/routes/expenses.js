@@ -12,6 +12,8 @@ const {
   getCategoryTotals,
   getMonthlyTotals,
   getDashboardSummary,
+  bulkUpdateExpenses,
+  handlePayout,
 } = require('../controllers/expenseController');
 
 router.use(protect);
@@ -19,6 +21,8 @@ router.use(protect);
 router.get('/summary/category', getCategoryTotals);
 router.get('/summary/monthly', getMonthlyTotals);
 router.get('/summary/dashboard', getDashboardSummary);
+router.put('/bulk-update', bulkUpdateExpenses);
+router.post('/payout', handlePayout);
 
 const wrap = fn => (req, res, next) => {
   console.log("Wrapper Next is:", typeof next);

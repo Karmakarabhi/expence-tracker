@@ -17,7 +17,22 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Connect to database
-connectDB();
+connectDB().then(async () => {
+  try {
+    const Expense = require('./models/Expense');
+    const res = await Expense.updateMany(
+      { paymentStatus: 'paid', $or: [{ paidAmount: { $exists: false } }, { paidAmount: 0 }] },
+      [
+        { $set: { paidAmount: '$totalAmount' } }
+      ]
+    );
+    if (res.modifiedCount > 0) {
+      console.log(`Synced paidAmount = totalAmount for ${res.modifiedCount} existing paid expenses.`);
+    }
+  } catch (err) {
+    console.error('Error migrating existing paidAmount field:', err);
+  }
+});
 
 const app = express();
 

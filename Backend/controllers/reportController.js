@@ -248,10 +248,10 @@ exports.getSupplierReport = async (req, res, next) => {
           totalAmount: { $sum: '$totalAmount' },
           count: { $sum: 1 },
           paidAmount: {
-            $sum: { $cond: [{ $eq: ['$paymentStatus', 'paid'] }, '$totalAmount', 0] },
+            $sum: { $ifNull: ['$paidAmount', 0] },
           },
           pendingAmount: {
-            $sum: { $cond: [{ $eq: ['$paymentStatus', 'pending'] }, '$totalAmount', 0] },
+            $sum: { $subtract: ['$totalAmount', { $ifNull: ['$paidAmount', 0] }] },
           },
         },
       },

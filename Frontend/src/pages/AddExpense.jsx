@@ -19,10 +19,14 @@ export default function AddExpense() {
     projectId: '',
     categoryId: '',
     itemName: '',
+    supplierName: '',
     quantity: 1,
+    unit: 'pieces',
     rate: '',
     date: new Date().toISOString().split('T')[0],
-    paymentStatus: 'paid'
+    paymentStatus: 'paid',
+    paymentMethod: 'cash',
+    notes: '',
   });
 
   useEffect(() => {
@@ -95,10 +99,26 @@ export default function AddExpense() {
             <Input id="itemName" name="itemName" required value={formData.itemName} onChange={handleChange} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="supplierName">Supplier / Provider</Label>
+            <Input id="supplierName" name="supplierName" placeholder="e.g. vendor, contractor, broker name" value={formData.supplierName} onChange={handleChange} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
-              <Input id="quantity" name="quantity" type="number" required min="1" step="0.01" value={formData.quantity} onChange={handleChange} />
+              <Input id="quantity" name="quantity" type="number" required min="0" step="0.01" value={formData.quantity} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label>Unit</Label>
+              <Select value={formData.unit} onValueChange={(v) => handleSelectChange('unit', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['pieces','kg','bags','sqft','sqm','cft','rft','liters','tons','trips','days','hours','boxes','bundles','rolls','sheets','sets','units','other'].map(u => (
+                    <SelectItem key={u} value={u}>{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="rate">Rate / Unit Price</Label>
@@ -112,7 +132,7 @@ export default function AddExpense() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
               <Input id="date" name="date" type="date" required value={formData.date} onChange={handleChange} />
@@ -127,6 +147,25 @@ export default function AddExpense() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Payment Method</Label>
+              <Select value={formData.paymentMethod} onValueChange={(v) => handleSelectChange('paymentMethod', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="upi">UPI</SelectItem>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="credit">Credit</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (optional)</Label>
+            <Input id="notes" name="notes" placeholder="Any additional notes…" value={formData.notes} onChange={handleChange} />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
