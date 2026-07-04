@@ -16,6 +16,7 @@ const spending = [
   { title: "Categories", url: "/categories", icon: Tags },
   { title: "Budget", url: "/budget", icon: Wallet },
   { title: "Reports", url: "/reports", icon: BarChart3 },
+  { title: "Supplier Report", url: "/reports/suppliers", icon: BarChart3 },
 ];
 
 const projectItems = [{ title: "Projects", url: "/projects", icon: FolderKanban }];
