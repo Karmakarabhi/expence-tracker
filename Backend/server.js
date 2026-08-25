@@ -17,7 +17,28 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Connect to database
-connectDB();
+connectDB().then(async () => {
+  try {
+    const Expense = require('./models/Expense');
+    const expenses = await Expense.find({
+      paymentStatus: 'paid',
+      $or: [{ paidAmount: { $exists: false } }, { paidAmount: 0 }]
+    });
+    
+    let count = 0;
+    for (let exp of expenses) {
+      exp.paidAmount = exp.totalAmount;
+      await exp.save();
+      count++;
+    }
+    
+    if (count > 0) {
+      console.log(`Synced paidAmount = totalAmount for ${count} existing paid expenses.`);
+    }
+  } catch (err) {
+    console.error('Error migrating existing paidAmount field:', err);
+  }
+});
 
 const app = express();
 
@@ -27,7 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS Setup
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Set this in Render dashboard
+  origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:5174'], // Set this in Render dashboard
   credentials: true
 }));
 
@@ -45,6 +66,8 @@ app.use('/api/projects', require('./routes/projects'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/suppliers', require('./routes/suppliers'));
+app.use('/api/attachments', require('./routes/attachments'));
 app.use('/api/portfolios', require('./routes/portfolios'));
 app.use('/api/holdings', require('./routes/holdings'));
 app.use('/api/transactions', require('./routes/transactions'));

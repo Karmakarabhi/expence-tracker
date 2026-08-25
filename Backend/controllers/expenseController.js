@@ -347,7 +347,13 @@ exports.getDashboardSummary = async (req, res, next) => {
       // Pending payments
       Expense.aggregate([
         { $match: { ...match, paymentStatus: 'pending' } },
-        { $group: { _id: null, total: { $sum: '$totalAmount' }, count: { $sum: 1 } } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: { $subtract: ['$totalAmount', { $ifNull: ['$paidAmount', 0] }] } },
+            count: { $sum: 1 }
+          }
+        },
       ]),
       // Category-wise totals
       Expense.aggregate([
@@ -411,6 +417,84 @@ exports.getDashboardSummary = async (req, res, next) => {
           total: m.total,
         })),
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Bulk update expenses (e.g. set supplierName)
+// @route   PUT /api/expenses/bulk-update
+exports.bulkUpdateExpenses = async (req, res, next) => {
+  try {
+    const { ids, supplierName } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please provide an array of expense IDs' });
+    }
+
+    const trimmedSupplier = (supplierName || '').trim();
+
+    const result = await Expense.updateMany(
+      { _id: { $in: ids }, createdBy: req.user.id },
+      { $set: { supplierName: trimmedSupplier } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully updated ${result.modifiedCount} expenses`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Apply payout amount to supplier pending balance (FIFO)
+// @route   POST /api/expenses/payout
+exports.handlePayout = async (req, res, next) => {
+  try {
+    const { supplierName, amount } = req.body;
+    if (!supplierName || !amount || Number(amount) <= 0) {
+      return res.status(400).json({ success: false, message: 'Supplier name and a positive amount are required' });
+    }
+
+    const payoutVal = Number(amount);
+    
+    // Find all pending expenses for this supplier under the current user, oldest first
+    const expenses = await Expense.find({
+      createdBy: req.user.id,
+      supplierName: supplierName.trim(),
+      paymentStatus: 'pending'
+    }).sort({ date: 1 });
+
+    let remainingPayout = payoutVal;
+    let updatedCount = 0;
+
+    for (let exp of expenses) {
+      if (remainingPayout <= 0) break;
+
+      const currentPaid = exp.paidAmount || 0;
+      const due = exp.totalAmount - currentPaid;
+      if (due <= 0) continue;
+
+      if (remainingPayout >= due) {
+        exp.paidAmount = exp.totalAmount;
+        exp.paymentStatus = 'paid';
+        remainingPayout -= due;
+      } else {
+        exp.paidAmount = currentPaid + remainingPayout;
+        remainingPayout = 0;
+      }
+
+      await exp.save();
+      updatedCount++;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully processed payout of ₹${payoutVal.toLocaleString()}. Updated ${updatedCount} expenses.`,
+      updatedCount,
+      remainingUnapplied: remainingPayout
     });
   } catch (error) {
     next(error);

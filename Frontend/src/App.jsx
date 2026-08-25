@@ -11,6 +11,7 @@ import AddExpense from './pages/AddExpense';
 import Categories from './pages/Categories';
 import Budget from './pages/Budget';
 import Reports from './pages/Reports';
+import SupplierReport from './pages/SupplierReport';
 import ProjectDetails from './pages/ProjectDetails';
 import { PortfolioProvider } from './context/PortfolioContext';
 import PortfolioDashboard from './pages/Portfolio/PortfolioDashboard';
@@ -59,6 +60,7 @@ function App() {
             <Route path="categories" element={<Categories />} />
             <Route path="budget" element={<Budget />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="reports/suppliers" element={<SupplierReport />} />
             <Route path="portfolio" element={<PortfolioDashboard />} />
             <Route path="portfolio/holdings" element={<HoldingsList />} />
             <Route path="portfolio/transactions" element={<TransactionHistory />} />

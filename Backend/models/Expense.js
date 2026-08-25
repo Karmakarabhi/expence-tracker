@@ -82,6 +82,11 @@ const expenseSchema = new mongoose.Schema(
       enum: ['paid', 'pending'],
       default: 'paid',
     },
+    paidAmount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Paid amount cannot be negative'],
+    },
     locationUsed: {
       type: String,
       trim: true,
@@ -112,10 +117,15 @@ const expenseSchema = new mongoose.Schema(
   }
 );
 
-// Pre-save: calculate total if not set
+// Pre-save: calculate total and sync paidAmount
 expenseSchema.pre('save', function () {
   if (this.quantity && this.rate) {
     this.totalAmount = this.quantity * this.rate;
+  }
+  if (this.paymentStatus === 'paid') {
+    this.paidAmount = this.totalAmount;
+  } else if (this.paidAmount === undefined || this.paidAmount === null) {
+    this.paidAmount = 0;
   }
 });
 
