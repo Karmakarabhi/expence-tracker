@@ -49,7 +49,7 @@ app.use('/api/portfolios', require('./routes/portfolios'));
 app.use('/api/holdings', require('./routes/holdings'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/mf', require('./routes/mfSearch'));
-app.use('/api/mf', require('./routes/mfSearch'));
+app.use('/api/ai', require('./routes/ai'));
 
 // Health check
 app.get('/api/health', (req, res) => {

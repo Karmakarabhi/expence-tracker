@@ -6,12 +6,13 @@ import MarketCapChart from '../../components/portfolio/charts/MarketCapChart';
 import PerformanceTimeline from '../../components/portfolio/charts/PerformanceTimeline';
 import FundWiseTable from '../../components/portfolio/FundWiseTable';
 import GoalTracker from '../../components/portfolio/GoalTracker';
+import AIAdvisorPanel from '../../components/portfolio/AIAdvisorPanel';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/card';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/formatters';
-import { Wallet, TrendingUp, Activity, Target, PieChart, Loader } from 'lucide-react';
+import { Wallet, TrendingUp, Activity, Target, PieChart } from 'lucide-react';
 
 export default function PortfolioAnalytics() {
   const { activePortfolio } = usePortfolio();
@@ -89,6 +90,9 @@ export default function PortfolioAnalytics() {
         />
         <MetricCard label="Est. XIRR" value={`${(xirr * 100)?.toFixed(1)}%`} deltaLabel="annualized" icon={Target} accent="success" />
       </div>
+
+      {/* AI Portfolio Advisor — lazy trigger, no API call until user clicks */}
+      <AIAdvisorPanel portfolioId={activePortfolio._id} />
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

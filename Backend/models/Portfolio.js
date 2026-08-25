@@ -34,6 +34,15 @@ const portfolioSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Target allocation (for AI rebalancing advice)
+    riskProfile: {
+      type: String,
+      enum: ['Conservative', 'Moderate', 'Aggressive'],
+      default: 'Moderate',
+    },
+    targetEquityPct: { type: Number, default: 60 },
+    targetDebtPct:   { type: Number, default: 30 },
+    targetGoldPct:   { type: Number, default: 10 },
   },
   {
     timestamps: true,

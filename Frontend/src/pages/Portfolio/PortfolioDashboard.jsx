@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatPct } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
-import { Wallet, TrendingUp, Target, Plus, AlertTriangle, PieChart, Presentation } from 'lucide-react';
+import { Wallet, TrendingUp, Target, Plus, AlertTriangle, PieChart, Presentation, Brain } from 'lucide-react';
 
 const PortfolioDashboard = () => {
     const { activePortfolio, loading, portfolios } = useContext(PortfolioContext);
@@ -127,22 +127,43 @@ const PortfolioDashboard = () => {
                 />
             </div>
 
-            <Card className="p-6 bg-gradient-to-r from-secondary to-secondary/50">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div>
-                        <h3 className="text-lg font-semibold mb-1">Dive Deeper into Your Analytics</h3>
-                        <p className="text-sm text-muted-foreground max-w-lg">
-                            Navigate to your Analytics Board to view rich visual data including Asset Allocation Charts,
-                            Market Capitalization distributions, XIRR calculations, and dynamic goal tracking.
-                        </p>
+            {/* CTA cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-6 bg-gradient-to-r from-secondary to-secondary/50">
+                    <div className="flex flex-col h-full gap-4">
+                        <div>
+                            <h3 className="text-base font-semibold mb-1">Portfolio Analytics</h3>
+                            <p className="text-sm text-muted-foreground">
+                                Asset allocation charts, cap distribution, XIRR, and goal tracking.
+                            </p>
+                        </div>
+                        <Button asChild className="w-full sm:w-auto mt-auto">
+                            <Link to="/portfolio/analytics">
+                                <PieChart className="h-4 w-4" /> View Analytics
+                            </Link>
+                        </Button>
                     </div>
-                    <Button asChild>
-                        <Link to="/portfolio/analytics">
-                            <PieChart className="h-4 w-4" /> View Analytics
-                        </Link>
-                    </Button>
-                </div>
-            </Card>
+                </Card>
+
+                <Card className="p-6 bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-200">
+                    <div className="flex flex-col h-full gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-base font-semibold">AI Portfolio Advisor</h3>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 font-medium">New</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Get AI-powered rebalancing advice, concentration analysis, and plain-English insights.
+                            </p>
+                        </div>
+                        <Button asChild className="w-full sm:w-auto mt-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white">
+                            <Link to="/portfolio/analytics">
+                                <Brain className="h-4 w-4" /> Get AI Review
+                            </Link>
+                        </Button>
+                    </div>
+                </Card>
+            </div>
 
             <CreateProfileModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </div>
