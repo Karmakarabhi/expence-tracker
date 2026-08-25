@@ -1,0 +1,23 @@
+{
+  "name": "finlight-monorepo",
+  "private": true,
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:all": "concurrently \"npm run dev:api\" \"npm run dev:expense\" \"npm run dev:wealth\"",
+    "dev:api": "npm --prefix apps/api start",
+    "dev:expense": "npm --prefix apps/expense-tracker dev",
+    "dev:wealth": "npm --prefix apps/investment-tracker dev",
+    "build": "turbo build",
+    "build:all": "npm --prefix apps/expense-tracker run build && npm --prefix apps/investment-tracker run build",
+    "lint": "turbo lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "turbo": "^2.4.4"
+  }
+}
